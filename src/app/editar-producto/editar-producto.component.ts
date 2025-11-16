@@ -11,7 +11,7 @@ export class EditarProductoComponent implements OnInit {
   id!: number;
   producto: any = {};
 
-  private apiUrl = 'http://172.172.90.61:8181/producto';
+  private apiUrl = 'http://localhost:8181/SHOPYSHOP/producto';
 
   @ViewChild('referenciaInput') referenciaInput!: ElementRef;
   @ViewChild('descripcionInput') descripcionInput!: ElementRef;

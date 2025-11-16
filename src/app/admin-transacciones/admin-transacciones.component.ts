@@ -22,7 +22,7 @@ export class AdminTransaccionesComponent implements OnInit {
   loading = false;
   error: string | null = null;
 
-  private transaccionesUrl = 'http://172.172.90.61:8181/api/transacciones/getAll';
+  private transaccionesUrl = 'http://localhost:8181/pi/transacciones/getAll';
 
   constructor(private http: HttpClient) {}
 

@@ -23,7 +23,7 @@ export class AdminClientesComponent implements OnInit {
   loading = false;
   error: string | null = null;
 
-  private clientesUrl = 'http://172.172.90.61:8181/usuario/all';
+  private clientesUrl = 'http://localhost:8181/usuario/all';
 
   constructor(private http: HttpClient) {}
 

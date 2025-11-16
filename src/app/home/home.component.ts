@@ -30,7 +30,7 @@ export class HomeComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.http.get<Producto[]>('http://172.172.90.61:8181/producto/getAll')
+    this.http.get<Producto[]>('http://localhost:8181/producto/getAll')
       .subscribe({
         next: data => this.productos = data,
         error: err => {

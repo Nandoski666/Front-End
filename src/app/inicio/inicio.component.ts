@@ -1,13 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
-interface LoginResponse {
-  id: number;
-  loginUsrio: string;
-  correoUsuario: string;
+interface ApiResponse {
+  success: boolean;
+  message?: string;
+  usuario?: {
+    id: number;
+    loginUsrio?: string;
+    correoUsuario?: string;
+    idTipoUsuario?: number;
+    estado?: number;
+    intentos?: number;
+  };
 }
 
 @Component({
@@ -20,7 +27,7 @@ interface LoginResponse {
 export class InicioComponent implements OnInit {
   email: string = '';
   password: string = '';
-  private apiUrl = 'http://172.172.90.61:8181/usuario';
+  private apiUrl = 'http://localhost:8181/usuario';
 
   constructor(private router: Router, private http: HttpClient) {}
 
@@ -29,7 +36,8 @@ export class InicioComponent implements OnInit {
     if (userSession) {
       try {
         const userData = JSON.parse(userSession);
-        if (userData.loginUsrio === 'admin') {
+        // Si tu backend no devuelve loginUsrio, ajusta aquí la comprobación
+        if (userData && userData.loginUsrio === 'admin') {
           this.router.navigate(['/admin']);
         } else {
           this.router.navigate(['/home']);
@@ -42,7 +50,7 @@ export class InicioComponent implements OnInit {
   }
 
   onLogin(): void {
-    // Verificación especial para admin
+    // Bypass local para admin (solo si realmente lo necesitas)
     if (this.email === 'admin@' && this.password === 'admin') {
       localStorage.setItem('userSession', JSON.stringify({ 
         loginUsrio: 'admin',
@@ -57,21 +65,42 @@ export class InicioComponent implements OnInit {
       claveUsrio: this.password
     };
 
-    this.http.post<LoginResponse>(`${this.apiUrl}/login`, loginPayload, { 
-      withCredentials: true 
-    }).subscribe({
-      next: (response) => {
-        localStorage.setItem('userSession', JSON.stringify(response));
-        this.router.navigate(['/home']);
-      },
-      error: (error) => {
-        if (error.status === 401) {
-          alert('Credenciales incorrectas');
-        } else {
-          alert('Error al iniciar sesión. Verifica tus datos.');
-        }
-      }
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
     });
+
+    // petición con credenciales (envía/acepta cookies de sesión)
+    this.http.post<ApiResponse>(`${this.apiUrl}/login`, loginPayload, { headers, withCredentials: true })
+      .subscribe({
+        next: (response) => {
+          console.log('Respuesta login:', response);
+          if (response && response.success && response.usuario) {
+            // Guardar en localStorage la info del usuario para navegación en front
+            localStorage.setItem('userSession', JSON.stringify(response.usuario));
+            // Redirigir según tipo de usuario (ajusta si tu back devuelve idTipoUsuario)
+            if (response.usuario.loginUsrio === 'admin') {
+              this.router.navigate(['/admin']);
+            } else {
+              this.router.navigate(['/home']);
+            }
+          } else {
+            // Mensaje de error más claro si el back devuelve success=false
+            const msg = response?.message || 'Credenciales inválidas';
+            alert(msg);
+          }
+        },
+        error: (error: HttpErrorResponse) => {
+          console.error('Error en login:', error);
+          if (error.status === 401) {
+            alert('Credenciales incorrectas.');
+          } else if (error.status === 0) {
+            alert('No se pudo conectar con el servidor. Revisa que el backend esté levantado.');
+          } else {
+            alert('Error al iniciar sesión. ' + (error.error?.message || 'Intenta de nuevo.'));
+          }
+        }
+      });
   }
 
   irARegistro(): void {
@@ -82,4 +111,3 @@ export class InicioComponent implements OnInit {
     this.router.navigate(['/recuperar-contrasena']);
   }
 }
-

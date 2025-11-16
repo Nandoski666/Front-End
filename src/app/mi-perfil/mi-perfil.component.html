@@ -14,17 +14,9 @@
     <div class="profile-card">
       <h2>Mi Perfil</h2>
       <form (ngSubmit)="onSubmit()" #perfilForm="ngForm" autocomplete="off">
+        
+        <!-- Información del perfil -->
         <div class="profile-info">
-          <div class="info-group">
-            <label for="loginUsrio">Usuario:</label>
-            <input
-              id="loginUsrio"
-              name="loginUsrio"
-              type="text"
-              [(ngModel)]="userProfile.loginUsrio"
-              required
-            />
-          </div>
           <div class="info-group">
             <label for="correoUsuario">Correo:</label>
             <input
@@ -37,6 +29,7 @@
           </div>
         </div>
 
+        <!-- Sección para cambiar contraseña -->
         <h3>Cambiar contraseña (opcional)</h3>
         <div class="profile-info">
           <div class="info-group">
@@ -71,10 +64,12 @@
           </div>
         </div>
 
+        <!-- Mensajes -->
         <div *ngIf="message" [ngClass]="{'error-message': isError, 'success-message': !isError}" class="message">
           {{ message }}
         </div>
 
+        <!-- Botones -->
         <div class="actions">
           <button type="submit" class="btn-save" [disabled]="isSubmitting">
             <i class="fas fa-save"></i> Guardar cambios

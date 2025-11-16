@@ -21,6 +21,13 @@ export const routes: Routes = [
     { path: 'recuperar-contrasena', 
         component: RecuperarContrasenaComponent 
     },
+        { path: 'mi-perfil', 
+        component: MiPerfilComponent 
+    },
+
+
+
+
   {
     path: 'register',
     component: RegistrarseComponent

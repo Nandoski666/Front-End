@@ -30,7 +30,7 @@ export class RecuperarContrasenaComponent implements OnInit {
   error: boolean = false;
   enviando: boolean = false;
 
-  private apiUrl = 'http://172.172.90.61:8181/usuario';
+  private apiUrl = 'http://localhost:8181/usuario';
 
   constructor(
     private fb: FormBuilder,

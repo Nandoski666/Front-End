@@ -47,7 +47,7 @@ export class AdminComponent implements OnInit {
   error: string | null = null;
   vistaActual: 'productos' | 'transacciones' | 'clientes' = 'productos';
 
-  private baseUrl = 'http://172.172.90.61:8181';
+  private baseUrl = 'http://localhost:8181';
   private baseProductoUrl = `${this.baseUrl}/producto`;
   private clientesUrl = `${this.baseUrl}/usuario/all`;
   private transaccionesUrl = `${this.baseUrl}/api/transacciones`;

@@ -14,7 +14,7 @@ export interface Producto {
   providedIn: 'root'
 })
 export class ProductoService {
-  private baseUrl = 'http://172.172.90.61:8181/producto';
+  private baseUrl = 'http://localhost:8181/producto';
 
   constructor(private http: HttpClient) {}
 

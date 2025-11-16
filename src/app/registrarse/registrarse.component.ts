@@ -12,8 +12,6 @@ import {
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { Client, Cliente } from '../service/shopyshop-api.cliente';
-import { API_BASE_URL } from '../service/shopyshop-api.cliente';
 
 @Component({
   selector: 'app-registrarse',
@@ -29,14 +27,13 @@ import { API_BASE_URL } from '../service/shopyshop-api.cliente';
 })
 export class RegistrarseComponent implements OnInit {
   regForm!: FormGroup;
-  private usuarioUrl = 'http://172.172.90.61:8181/usuario';
-  private clienteUrl = 'http://172.172.90.61:8181/cliente';
+  private usuarioUrl = 'http://localhost:8181/usuario';
+  private clienteUrl = 'http://localhost:8181/cliente';
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private http: HttpClient,
-    private client: Client
+    private http: HttpClient, 
   ) {}
 
   ngOnInit(): void {

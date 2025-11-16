@@ -1,18 +1,14 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 
 interface UserProfile {
   id: number;
-  loginUsrio: string;
   correoUsuario: string;
-  claveUsrio?: string;
   idTipoUsuario: string;
-  intentos?: number;
   estado?: number;
-  token?: string;
 }
 
 interface ApiResponse {
@@ -31,10 +27,10 @@ interface ApiResponse {
 export class MiPerfilComponent implements OnInit {
   userProfile: UserProfile = {
     id: 0,
-    loginUsrio: '',
     correoUsuario: '',
     idTipoUsuario: ''
   };
+
   currentPassword: string = '';
   newPassword: string = '';
   confirmPassword: string = '';
@@ -42,12 +38,9 @@ export class MiPerfilComponent implements OnInit {
   isError: boolean = false;
   isSubmitting: boolean = false;
 
-  private apiUrl = 'http://172.172.90.61:8181/usuario';
+  private apiUrl = 'http://localhost:8181/usuario';
 
-  constructor(
-    private http: HttpClient,
-    private router: Router
-  ) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   ngOnInit(): void {
     const userSession = localStorage.getItem('userSession');
@@ -58,20 +51,18 @@ export class MiPerfilComponent implements OnInit {
 
     try {
       const sessionData = JSON.parse(userSession);
-      if (!sessionData.id || !sessionData.token) {
+      if (!sessionData.id) {
         this.router.navigate(['/inicio']);
         return;
       }
-      
+
       this.userProfile = {
         id: sessionData.id,
-        loginUsrio: sessionData.loginUsrio || '',
         correoUsuario: sessionData.correoUsuario || '',
         idTipoUsuario: sessionData.idTipoUsuario || '',
-        estado: sessionData.estado,
-        token: sessionData.token
+        estado: sessionData.estado
       };
-      
+
       this.loadUserProfile();
     } catch (error) {
       console.error('Error parsing user session:', error);
@@ -80,43 +71,20 @@ export class MiPerfilComponent implements OnInit {
   }
 
   private getHttpOptions() {
-    return {
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.userProfile.token}`
-      })
-    };
+    return { withCredentials: true };
   }
 
   loadUserProfile(): void {
-    if (!this.userProfile.id) {
-      console.error('No user ID available');
-      this.router.navigate(['/inicio']);
-      return;
-    }
-
-    console.log('Loading profile for user ID:', this.userProfile.id);
-    
-    this.http.get<ApiResponse>(
-      `${this.apiUrl}/profile/${this.userProfile.id}`,
-      this.getHttpOptions()
-    ).subscribe({
-      next: (response) => {
-        console.log('Profile data received:', response);
-        if (response.success && response.usuario) {
-          this.userProfile = {
-            ...this.userProfile,
-            ...response.usuario,
-            token: this.userProfile.token // Preserve the token
-          };
-          localStorage.setItem('userSession', JSON.stringify(this.userProfile));
-        }
-      },
-      error: (error: HttpErrorResponse) => {
-        console.error('Error loading profile:', error);
-        this.handleError(error);
-      }
-    });
+    this.http.get<ApiResponse>(`${this.apiUrl}/profile/${this.userProfile.id}`, this.getHttpOptions())
+      .subscribe({
+        next: (response) => {
+          if (response.success && response.usuario) {
+            this.userProfile = { ...response.usuario };
+            localStorage.setItem('userSession', JSON.stringify(this.userProfile));
+          }
+        },
+        error: (error: HttpErrorResponse) => this.handleError(error)
+      });
   }
 
   showMessage(msg: string, isError: boolean) {
@@ -129,15 +97,11 @@ export class MiPerfilComponent implements OnInit {
   }
 
   private handleError(error: HttpErrorResponse): void {
-    console.error('Error completo:', error);
-    
     if (error.status === 401) {
-      console.log('Error de autenticación - redirigiendo al inicio');
       localStorage.removeItem('userSession');
       this.router.navigate(['/inicio']);
       return;
     }
-    
     const message = error.error?.message || 'Ha ocurrido un error';
     this.showMessage(message, true);
   }
@@ -152,119 +116,84 @@ export class MiPerfilComponent implements OnInit {
     }
 
     this.updateProfile().then(() => {
+      // ✅ AQUÍ SE LLAMA AL MÉTODO DEL BACKEND PARA CAMBIAR CONTRASEÑA
       if (this.shouldUpdatePassword()) {
+        console.log("Llamando al backend para cambiar contraseña...");
         this.updatePassword();
       } else {
         this.isSubmitting = false;
       }
-    }).catch(() => {
-      this.isSubmitting = false;
-    });
+    }).catch(() => this.isSubmitting = false);
   }
 
   private validateForm(): boolean {
-    if (!this.userProfile.loginUsrio?.trim()) {
-      this.showMessage('El nombre de usuario es requerido', true);
-      return false;
-    }
-
     if (!this.userProfile.correoUsuario?.trim()) {
       this.showMessage('El correo electrónico es requerido', true);
       return false;
     }
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(this.userProfile.correoUsuario.trim())) {
       this.showMessage('Por favor, ingresa un correo electrónico válido', true);
       return false;
     }
-
     if (this.shouldUpdatePassword()) {
       if (!this.currentPassword) {
         this.showMessage('Debes ingresar tu contraseña actual', true);
         return false;
       }
-
       if (!this.newPassword) {
         this.showMessage('Debes ingresar una nueva contraseña', true);
         return false;
       }
-
       if (!this.confirmPassword) {
         this.showMessage('Debes confirmar la nueva contraseña', true);
         return false;
       }
-
       if (this.newPassword !== this.confirmPassword) {
         this.showMessage('Las contraseñas nuevas no coinciden', true);
         return false;
       }
-
       if (this.newPassword.length < 8) {
         this.showMessage('La nueva contraseña debe tener al menos 8 caracteres', true);
         return false;
       }
     }
-
     return true;
   }
 
   private shouldUpdatePassword(): boolean {
-    return !!(this.newPassword || this.currentPassword || this.confirmPassword);
+    return !!(this.newPassword && this.currentPassword && this.confirmPassword);
   }
 
   private async updateProfile(): Promise<void> {
-    if (!this.userProfile.id) {
-      this.showMessage('Error: No se encontró el ID del usuario', true);
-      return;
-    }
-
     try {
-      const userId = this.userProfile.id;
-      console.log('Updating profile for user:', userId);
-      
-      const updateData = {
-        loginUsrio: this.userProfile.loginUsrio.trim(),
-        correoUsuario: this.userProfile.correoUsuario.trim()
-      };
-
-      console.log('Update data:', updateData);
-
+      const updateData = { correoUsuario: this.userProfile.correoUsuario.trim() };
       const response = await this.http.put<ApiResponse>(
-        `${this.apiUrl}/${userId}`,
+        `${this.apiUrl}/${this.userProfile.id}`,
         updateData,
         this.getHttpOptions()
       ).toPromise();
 
-      if (response && response.success && response.usuario) {
-        this.userProfile = {
-          ...this.userProfile,
-          ...response.usuario
-        };
-        localStorage.setItem('userSession', JSON.stringify(this.userProfile));
+      if (response && response.success) {
         this.showMessage('Perfil actualizado correctamente', false);
+        this.loadUserProfile();
       } else {
         throw new Error(response?.message || 'No se recibió respuesta del servidor');
       }
     } catch (error) {
-      console.error('Error en updateProfile:', error);
       this.handleError(error as HttpErrorResponse);
       throw error;
     }
   }
 
   private async updatePassword(): Promise<void> {
-    if (!this.userProfile.id) {
-      this.showMessage('Error: No se encontró el ID del usuario', true);
-      return;
-    }
-
     try {
       const passwordData = {
         currentPassword: this.currentPassword,
         newPassword: this.newPassword
       };
 
+      // ✅ AQUÍ SE HACE LA LLAMADA AL BACKEND PARA CAMBIAR CONTRASEÑA
       const response = await this.http.put<ApiResponse>(
         `${this.apiUrl}/${this.userProfile.id}/password`,
         passwordData,
@@ -272,10 +201,11 @@ export class MiPerfilComponent implements OnInit {
       ).toPromise();
 
       if (response && response.success) {
-        this.showMessage('Contraseña actualizada correctamente', false);
+        this.showMessage(response.message || 'Contraseña actualizada correctamente', false);
         this.currentPassword = '';
         this.newPassword = '';
         this.confirmPassword = '';
+        this.loadUserProfile();
       } else {
         throw new Error(response?.message || 'Error al actualizar la contraseña');
       }
@@ -295,4 +225,4 @@ export class MiPerfilComponent implements OnInit {
     localStorage.removeItem('userSession');
     this.router.navigate(['/inicio']);
   }
-} 
+}
