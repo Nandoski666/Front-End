@@ -7,10 +7,6 @@
         <a (click)="setVista('productos')" [class.active]="vistaActual === 'productos'">Productos</a>
         <a (click)="setVista('transacciones')" [class.active]="vistaActual === 'transacciones'">Transacciones</a>
         <a (click)="setVista('clientes')" [class.active]="vistaActual === 'clientes'">Clientes</a>
-        
-        <button class="btn-logout" (click)="cerrarSesion()">
-          <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
-        </button>
       </nav>
     </div>
   </header>

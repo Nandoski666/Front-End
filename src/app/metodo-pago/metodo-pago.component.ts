@@ -7,7 +7,7 @@ import { CarritoService } from '../service/carrito.service';
 import { firstValueFrom } from 'rxjs';
 
 interface CompraRequest {
-  idBanco: string;
+  nombreBanco: string;
   idFranquicia: string;
   idMetodoPago: number;
   numTarjeta: string;
@@ -201,7 +201,7 @@ try {
   const valorVenta = Math.round(this.total);    // o precisión exacta si usas decimales
 
   const compraRequest: CompraRequest = {
-    idBanco: this.selectedMethod === 'pse' ? this.bank : '',
+    nombreBanco: this.selectedMethod === 'pse' ? this.bank : 'Bancolombia',
     idFranquicia: this.selectedMethod === 'card' ? 'VISA' : '',
     idMetodoPago: this.selectedMethod === 'card' ? 1 : 2,
     numTarjeta: this.selectedMethod === 'card' ? this.cardNumber.replace(/\s/g, '') : '',
@@ -234,7 +234,7 @@ try {
       // Use any for the response to be flexible with backend DTO shape
       const response: any = await firstValueFrom(
         this.http.post<any>(
-          `${this.apiUrl}/realizarCompra`,
+          `${this.apiUrl}/realizar-compra`,
           compraRequest,
           { headers, withCredentials: true } // envía cookies de sesión
         )
@@ -277,7 +277,7 @@ try {
       this.iva = 0;
       this.resetForm();
 
-      alert(`¡Compra realizada con éxito!\nID Transacción: ${txId}\nTotal: $${valor}\nMétodo: ${metodoPagoTipo}`);
+      alert(`¡Compra realizada con éxito!\nTotal: $${valor}\nMétodo: ${metodoPagoTipo}`);
       this.router.navigate(['/home']);
     } catch (error) {
       console.error('Error en la transacción:', error);

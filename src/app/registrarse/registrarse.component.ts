@@ -28,7 +28,6 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 export class RegistrarseComponent implements OnInit {
   regForm!: FormGroup;
   private usuarioUrl = 'http://localhost:8181/usuario';
-  private clienteUrl = 'http://localhost:8181/cliente';
 
   constructor(
     private fb: FormBuilder,
@@ -98,17 +97,7 @@ export class RegistrarseComponent implements OnInit {
     // Guardar en usuario
     this.http.post(`${this.usuarioUrl}/register`, nuevoUsuario).subscribe({
       next: () => {
-        // Guardar en cliente
-        this.http.post(`${this.clienteUrl}/saveCliente`, nuevoCliente).subscribe({
-          next: () => {
-            alert('Registro exitoso. Revisa tu correo: recibirás tu contraseña temporal.');
-            this.router.navigate(['/inicio']);
-          },
-          error: err => {
-            console.error('Error al registrar cliente:', err);
-            alert('Usuario creado, pero error al guardar cliente.');
-          }
-        });
+        this.router.navigate(['/inicio']);
       },
       error: err => {
         console.error('Error al registrar usuario:', err);
